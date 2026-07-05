@@ -1,0 +1,6 @@
+{
+  "name": "Rolo - BJJ Tracker",
+  "description": "Premium BJJ training log and technique validation platform for professors and students.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-rolo-bg: #071711;
+  --color-rolo-surface: #12291F;
+  --color-rolo-surface-hover: #1A3A2C;
+  --color-rolo-gold: #E6C05C;
+  --color-rolo-gold-hover: #F0D07B;
+  --color-rolo-gold-dim: rgba(230, 192, 92, 0.15);
+  --color-rolo-text: #F3F4F6;
+  --color-rolo-text-muted: #9CA3AF;
+  --color-rolo-success: #34D399;
+}
+
+body {
+  @apply bg-rolo-bg text-rolo-text antialiased;
+}
