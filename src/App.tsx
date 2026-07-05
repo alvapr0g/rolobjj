@@ -58,7 +58,7 @@ function AppContent() {
               onClick={() => setView('profesor')}
               className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${view === 'profesor' ? 'bg-rolo-surface text-rolo-gold' : 'text-rolo-text-muted hover:text-white'}`}
             >
-              <GraduationCap className="w-3.5 h-3.5" /> Prof
+              <GraduationCap className="w-3.5 h-3.5" /> Profesor
             </button>
             <button 
               onClick={() => setView('inicio')}
@@ -71,7 +71,7 @@ function AppContent() {
               className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${view === 'academias' ? 'bg-rolo-surface text-[#34D399]' : 'text-rolo-text-muted hover:text-white'}`}
               title="Buscar Academias"
             >
-              <Globe className="w-3.5 h-3.5" />
+              <Globe className="w-3.5 h-3.5" /> Busca tu academia
             </button>
           </div>
           
