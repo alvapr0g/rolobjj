@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, Home, BookOpen, TrendingUp, User } from 'lucide-react';
 import { ViewState } from '../types';
 
 export function ResponsiveNav({ currentView, onChangeView, onOpenLogSession, isDesktop }: { 
@@ -32,18 +32,18 @@ export function ResponsiveNav({ currentView, onChangeView, onOpenLogSession, isD
 
   return (
     <div className="absolute bottom-0 left-0 w-full bg-rolo-bg border-t border-white/5 px-6 py-4 flex justify-between items-center z-40">
-      <MobileNavItem isActive={currentView === 'inicio'} label="Inicio" onClick={() => onChangeView('inicio')} />
-      <MobileNavItem isActive={currentView === 'biblioteca'} label="Biblioteca" onClick={() => onChangeView('biblioteca')} />
+      <MobileNavItem isActive={currentView === 'inicio'} label="Inicio" icon={Home} onClick={() => onChangeView('inicio')} />
+      <MobileNavItem isActive={currentView === 'biblioteca'} label="Biblioteca" icon={BookOpen} onClick={() => onChangeView('biblioteca')} />
       
       <button 
         onClick={onOpenLogSession}
-        className="w-14 h-14 bg-rolo-gold rounded-full flex items-center justify-center text-rolo-bg shadow-lg shadow-rolo-gold/20 -mt-8 hover:scale-105 transition-transform shrink-0 relative z-10"
+        className="w-full max-w-[56px] h-14 bg-rolo-gold rounded-full flex items-center justify-center text-rolo-bg shadow-lg shadow-rolo-gold/20 -mt-8 hover:scale-105 transition-transform shrink-0 relative z-10"
       >
         <Plus className="w-8 h-8" strokeWidth={2.5} />
       </button>
 
-      <MobileNavItem isActive={currentView === 'progreso'} label="Progreso" onClick={() => onChangeView('progreso')} />
-      <MobileNavItem isActive={currentView === 'perfil'} label="Perfil" onClick={() => onChangeView('perfil')} />
+      <MobileNavItem isActive={currentView === 'progreso'} label="Progreso" icon={TrendingUp} onClick={() => onChangeView('progreso')} />
+      <MobileNavItem isActive={currentView === 'perfil'} label="Perfil" icon={User} onClick={() => onChangeView('perfil')} />
     </div>
   );
 }
@@ -60,10 +60,12 @@ function DesktopNavItem({ label, isActive, onClick }: any) {
   );
 }
 
-function MobileNavItem({ label, isActive, onClick }: any) {
+function MobileNavItem({ label, isActive, icon: Icon, onClick }: any) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1.5 w-12">
-      <div className={`w-5 h-5 rounded-md ${isActive ? 'bg-rolo-gold' : 'bg-rolo-text-muted/50'}`}></div>
+    <button onClick={onClick} className="flex flex-col items-center gap-1 w-12">
+      <div className={`flex items-center justify-center w-8 h-8 rounded-xl transition-colors ${isActive ? 'bg-rolo-gold/10 text-rolo-gold' : 'text-rolo-text-muted hover:bg-white/5 hover:text-white'}`}>
+        <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+      </div>
       <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-rolo-gold' : 'text-rolo-text-muted'}`}>
         {label}
       </span>
