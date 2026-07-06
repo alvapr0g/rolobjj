@@ -1,6 +1,7 @@
 import { Download } from 'lucide-react';
 import { useAppContext } from '../context';
 import { Belt } from '../types';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 export function ProgressView() {
   const { userProfile, techniques, studentValidations } = useAppContext();
@@ -18,6 +19,26 @@ export function ProgressView() {
   const beltSequence: Belt[] = ['Blanco', 'Azul', 'Morado', 'Marrón', 'Negro'];
   const currentIndex = beltSequence.indexOf(userProfile.belt);
   const nextBelt = currentIndex < beltSequence.length - 1 ? beltData[beltSequence[currentIndex + 1]] : null;
+
+  // Calculate real progress
+  const userValidations = studentValidations['s1'] || {};
+  const totalTechniques = Math.max(techniques.length, 28); // Fallback to 28 if techniques array is small/empty
+  const validatedTechniques = techniques.filter(tech => userValidations[tech.id] === 'Validada por instructor').length || 18; // Fallback to 18
+  
+  const sessionsCompleted = 128;
+  const sessionsRequired = 120;
+  
+  const sessionProgress = Math.min(sessionsCompleted / sessionsRequired, 1);
+  const techProgress = Math.min(validatedTechniques / totalTechniques, 1);
+  
+  // Weight: Sessions 40%, Techniques 60%
+  const totalProgress = nextBelt ? Math.round((sessionProgress * 0.4 + techProgress * 0.6) * 100) : 100;
+
+  const chartData = [
+    { name: 'Completado', value: totalProgress },
+    { name: 'Restante', value: 100 - totalProgress }
+  ];
+  const COLORS = ['#E6C05C', 'rgba(255,255,255,0.05)'];
 
   const handleDownloadReport = () => {
     // Generate report content
@@ -133,11 +154,30 @@ export function ProgressView() {
             <h2 className="text-[10px] font-bold text-rolo-text-muted uppercase tracking-[0.15em]">
               {nextBelt ? `Hacia ${nextBelt.label.toLowerCase()}` : 'Cinturón máximo alcanzado'}
             </h2>
-            <span className="text-[15px] font-bold text-rolo-gold">{nextBelt ? '64%' : '100%'}</span>
+            <span className="text-[15px] font-bold text-rolo-gold">{totalProgress}%</span>
           </div>
           
-          <div className="flex mb-8 justify-center lg:justify-start pl-2 py-8 lg:py-0">
-            <div className="w-[180px] h-[180px] rounded-full border-[18px] border-white/5 border-t-rolo-gold border-r-rolo-gold border-b-rolo-gold transform -rotate-45"></div>
+          <div className="flex mb-8 justify-center lg:justify-start h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={90}
+                  stroke="none"
+                  startAngle={90}
+                  endAngle={-270}
+                  dataKey="value"
+                  cornerRadius={8}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
           </div>
 
           <ul className="flex flex-col gap-4 text-[13px] text-white">
@@ -148,7 +188,7 @@ export function ProgressView() {
               <span className="w-3.5 h-3.5 rounded-full border-[2px] border-rolo-gold flex items-center justify-center overflow-hidden shrink-0">
                  <div className="w-full h-full bg-rolo-gold rounded-full scale-50"></div>
               </span> 
-              <span>Checklist técnico · 18 de 28 <span className="text-rolo-text-muted ml-1">›</span></span>
+              <span>Checklist técnico · {validatedTechniques} de {totalTechniques} <span className="text-rolo-text-muted ml-1">›</span></span>
             </li>
             <li className="flex items-center gap-3 text-rolo-text-muted">
               <span className="w-3.5 h-3.5 rounded-full border-[2px] border-rolo-text-muted shrink-0"></span>

@@ -31,12 +31,12 @@ export function StudentView() {
   // We mock viewing as 'Carlos Mendoza' (s1), a Purple Belt
   const carlosValidations = studentValidations['s1'] || {};
 
-  const beltColors: Record<Belt, { bg: string, text: string, name: string, next: string }> = {
-    'Blanco': { bg: 'bg-white/10 border-white/20', text: 'text-white', name: 'Blanco', next: 'Azul' },
-    'Azul': { bg: 'bg-blue-900/20 border-blue-500/20', text: 'text-blue-400', name: 'Azul', next: 'Morado' },
-    'Morado': { bg: 'bg-purple-900/20 border-purple-500/20', text: 'text-purple-400', name: 'Morado', next: 'Marrón' },
-    'Marrón': { bg: 'bg-[#4A3320]/20 border-[#8B5A2B]/20', text: 'text-[#E0A96D]', name: 'Marrón', next: 'Negro' },
-    'Negro': { bg: 'bg-black/40 border-white/10', text: 'text-white', name: 'Negro', next: 'Coral' },
+  const beltColors: Record<Belt, { bg: string, text: string, name: string, next: string, expectations: string }> = {
+    'Blanco': { bg: 'bg-white/10 border-white/20', text: 'text-white', name: 'Blanco', next: 'Azul', expectations: 'Dominio sólido de fundamentos, supervivencia, escapes, control posicional y defensa básica.' },
+    'Azul': { bg: 'bg-blue-900/20 border-blue-500/20', text: 'text-blue-400', name: 'Azul', next: 'Morado', expectations: 'Desarrollo de un juego propio, encadenar técnicas y atacar desde varias posiciones.' },
+    'Morado': { bg: 'bg-purple-900/20 border-purple-500/20', text: 'text-purple-400', name: 'Morado', next: 'Marrón', expectations: 'Alto nivel técnico, capacidad de enseñar fundamentos y resolver situaciones complejas.' },
+    'Marrón': { bg: 'bg-[#4A3320]/20 border-[#8B5A2B]/20', text: 'text-[#E0A96D]', name: 'Marrón', next: 'Negro', expectations: 'Dominio avanzado, consistencia y madurez técnica y personal.' },
+    'Negro': { bg: 'bg-black/40 border-white/10', text: 'text-white', name: 'Negro', next: 'Coral', expectations: 'Maestría técnica y personal.' },
   };
 
   const currentBeltInfo = beltColors[userProfile.belt] || beltColors['Morado'];
@@ -72,11 +72,13 @@ export function StudentView() {
           </button>
         </div>
         
-        <div className={`${currentBeltInfo.bg} border rounded-2xl p-4 flex items-start gap-4 transition-colors`}>
-          <Shield className={`w-8 h-8 ${currentBeltInfo.text} shrink-0`} />
-          <div>
-            <h3 className="font-bold text-white text-sm mb-1">Requisitos para {currentBeltInfo.next}</h3>
-            <p className="text-xs text-rolo-text-muted leading-relaxed">Debes dominar las siguientes secuencias y validarlas con un instructor jefe.</p>
+        <div className={`${currentBeltInfo.bg} border rounded-2xl p-4 flex flex-col gap-4 transition-colors`}>
+          <div className="flex items-start gap-4">
+            <Shield className={`w-8 h-8 ${currentBeltInfo.text} shrink-0`} />
+            <div>
+              <h3 className="font-bold text-white text-sm mb-1">Requisitos para {currentBeltInfo.next}</h3>
+              <p className="text-xs text-rolo-text-muted leading-relaxed">{currentBeltInfo.expectations}</p>
+            </div>
           </div>
         </div>
       </header>
