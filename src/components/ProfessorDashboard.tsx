@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Users, CheckCircle2, ChevronRight, Check, Tag, Bot } from 'lucide-react';
+import { Search, Users, CheckCircle2, ChevronRight, Check, Tag, Bot, Bell } from 'lucide-react';
 import { useAppContext } from '../context';
 
+interface AlertLog {
+  id: string;
+  date: string;
+  studentName: string;
+  message: string;
+}
+
 export function ProfessorDashboard() {
-  const { techniques, students, validateTechniqueForStudents } = useAppContext();
+  const { techniques, students, validateTechniqueForStudents, userProfile } = useAppContext();
   
   // Wizard State
   const [step, setStep] = useState(1);
@@ -13,6 +20,23 @@ export function ProfessorDashboard() {
   const [selectedTech, setSelectedTech] = useState<string | null>(null);
   const [attendees, setAttendees] = useState<Set<string>>(new Set());
   const [isTestingAlert, setIsTestingAlert] = useState(false);
+  const [alertLogs, setAlertLogs] = useState<AlertLog[]>([]);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch('/api/alert-logs');
+        if (res.ok) {
+          const data = await res.json();
+          setAlertLogs(data);
+        }
+      } catch (e) {
+        console.error("Error fetching alert logs:", e);
+      }
+    };
+    
+    fetchLogs();
+  }, [step, isTestingAlert]);
 
   const handleTestAlert = async () => {
     setIsTestingAlert(true);
@@ -158,6 +182,29 @@ export function ProfessorDashboard() {
                       </button>
                     ))}
                   </div>
+                </section>
+
+                {/* Alert Logs */}
+                <section className="mt-6 border-t border-white/5 pt-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Bell className="w-5 h-5 text-rolo-gold" />
+                    <h2 className="text-sm font-medium text-rolo-text-muted uppercase tracking-wider">Log de Alertas Telegram</h2>
+                  </div>
+                  {alertLogs.length === 0 ? (
+                    <p className="text-sm text-rolo-text-muted/60">No se han enviado alertas recientes.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {alertLogs.map(log => (
+                        <div key={log.id} className="bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col gap-1">
+                          <div className="flex items-center justify-between text-xs text-rolo-text-muted mb-1">
+                            <span className="font-semibold text-white">{log.studentName}</span>
+                            <span>{new Date(log.date).toLocaleString()}</span>
+                          </div>
+                          <p className="text-sm text-rolo-text leading-relaxed">{log.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </section>
               </motion.div>
             )}

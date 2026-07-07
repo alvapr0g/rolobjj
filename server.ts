@@ -41,9 +41,22 @@ async function startServer() {
     }
   };
 
+  // In-memory alert logs
+  interface AlertLog {
+    id: string;
+    date: string;
+    studentName: string;
+    message: string;
+  }
+  let alertLogs: AlertLog[] = [];
+
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.get("/api/alert-logs", (req, res) => {
+    res.json(alertLogs);
   });
 
   app.post("/api/test-telegram-alert", async (req, res) => {
@@ -58,6 +71,12 @@ async function startServer() {
       const mensaje = `Alerta: El estudiante ${studentName} bajó su asistencia un 30% esta semana.`;
       const success = await sendTelegramMessage(mensaje);
       if (success) {
+        alertLogs.unshift({
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          studentName,
+          message: mensaje
+        });
         res.json({ analysis: "Alerta de prueba enviada exitosamente.", alertSent: true });
       } else {
         res.status(500).json({ error: "Fallo al enviar la alerta a Telegram (la API devolvió error)." });
@@ -125,6 +144,12 @@ ${JSON.stringify(studentData, null, 2)}`;
             const mensaje = call.args.mensaje as string;
             const success = await sendTelegramMessage(mensaje);
             if (success) {
+              alertLogs.unshift({
+                id: Date.now().toString(),
+                date: new Date().toISOString(),
+                studentName: studentData.name,
+                message: mensaje
+              });
               alertSent = true;
             }
           }
