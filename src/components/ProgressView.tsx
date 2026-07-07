@@ -39,7 +39,7 @@ export function ProgressView() {
     { name: 'Completado', value: totalProgress },
     { name: 'Restante', value: 100 - totalProgress }
   ];
-  const COLORS = ['#E6C05C', 'rgba(255,255,255,0.05)'];
+  const COLORS = [currentBelt.hex, 'rgba(255,255,255,0.05)'];
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{text: string, alertSent: boolean} | null>(null);
