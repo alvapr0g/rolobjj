@@ -51,6 +51,10 @@ export function ProgressView() {
       if (simulateDrop) {
         const response = await fetch('/api/test-telegram-alert', {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ studentName: userProfile.name }),
         });
         const data = await response.json();
         if (!response.ok) {

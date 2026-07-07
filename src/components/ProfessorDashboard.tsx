@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Users, CheckCircle2, ChevronRight, Check, Tag } from 'lucide-react';
+import { Search, Users, CheckCircle2, ChevronRight, Check, Tag, Bot } from 'lucide-react';
 import { useAppContext } from '../context';
 
 export function ProfessorDashboard() {
@@ -12,6 +12,30 @@ export function ProfessorDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTech, setSelectedTech] = useState<string | null>(null);
   const [attendees, setAttendees] = useState<Set<string>>(new Set());
+  const [isTestingAlert, setIsTestingAlert] = useState(false);
+
+  const handleTestAlert = async () => {
+    setIsTestingAlert(true);
+    try {
+      const response = await fetch('/api/test-telegram-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ studentName: userProfile.name }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar alerta de prueba');
+      }
+      alert('Alerta enviada exitosamente: ' + data.analysis);
+    } catch (e: any) {
+      console.error(e);
+      alert('Error: ' + e.message);
+    } finally {
+      setIsTestingAlert(false);
+    }
+  };
 
   const filteredTechniques = techniques.filter(t => 
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -47,10 +71,20 @@ export function ProfessorDashboard() {
       <header className="px-6 py-5 border-b border-white/5 shrink-0 bg-rolo-surface/30">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight text-white">Panel del Profesor</h1>
-          <div className="flex items-center gap-2 w-32">
-            {[1, 2, 3].map(i => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full ${step >= i ? 'bg-rolo-gold' : 'bg-rolo-surface'}`} />
-            ))}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleTestAlert}
+              disabled={isTestingAlert}
+              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-red-900/20 text-red-200 border border-red-500/30 rounded-lg hover:bg-red-900/40 transition-colors disabled:opacity-50"
+            >
+              <Bot className="w-3.5 h-3.5" />
+              {isTestingAlert ? 'Enviando...' : 'Test Alerta'}
+            </button>
+            <div className="flex items-center gap-2 w-24">
+              {[1, 2, 3].map(i => (
+                <div key={i} className={`h-1.5 flex-1 rounded-full ${step >= i ? 'bg-rolo-gold' : 'bg-rolo-surface'}`} />
+              ))}
+            </div>
           </div>
         </div>
       </header>

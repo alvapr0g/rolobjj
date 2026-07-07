@@ -54,7 +54,8 @@ async function startServer() {
          return res.status(500).json({ error: "Faltan secretos de Telegram en el entorno." });
       }
 
-      const mensaje = "Alerta: El estudiante Juan Pérez bajó su asistencia un 30% esta semana.";
+      const studentName = req.body.studentName || "Juan Pérez";
+      const mensaje = `Alerta: El estudiante ${studentName} bajó su asistencia un 30% esta semana.`;
       const success = await sendTelegramMessage(mensaje);
       if (success) {
         res.json({ analysis: "Alerta de prueba enviada exitosamente.", alertSent: true });
