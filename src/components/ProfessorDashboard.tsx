@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Users, CheckCircle2, ChevronRight, Check, Tag, Bot, Bell } from 'lucide-react';
+import { Search, Users, CheckCircle2, ChevronRight, Check, Tag, Bot, Bell, Download } from 'lucide-react';
 import { useAppContext } from '../context';
 
 interface AlertLog {
@@ -186,9 +186,33 @@ export function ProfessorDashboard() {
 
                 {/* Alert Logs */}
                 <section className="mt-6 border-t border-white/5 pt-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Bell className="w-5 h-5 text-rolo-gold" />
-                    <h2 className="text-sm font-medium text-rolo-text-muted uppercase tracking-wider">Log de Alertas Telegram</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-5 h-5 text-rolo-gold" />
+                      <h2 className="text-sm font-medium text-rolo-text-muted uppercase tracking-wider">Log de Alertas Telegram</h2>
+                    </div>
+                    {alertLogs.length > 0 && (
+                      <button
+                        onClick={() => {
+                          const headers = "Fecha,Estudiante,Mensaje\n";
+                          const rows = alertLogs.map(log => `"${new Date(log.date).toLocaleString()}","${log.studentName}","${log.message.replace(/"/g, '""')}"`).join("\n");
+                          const csv = headers + rows;
+                          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.setAttribute("href", url);
+                          link.setAttribute("download", `alert_logs_${new Date().toISOString().split('T')[0]}.csv`);
+                          link.style.visibility = 'hidden';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-rolo-surface text-rolo-text border border-white/10 rounded-lg hover:bg-rolo-surface-hover transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Descargar CSV
+                      </button>
+                    )}
                   </div>
                   {alertLogs.length === 0 ? (
                     <p className="text-sm text-rolo-text-muted/60">No se han enviado alertas recientes.</p>
