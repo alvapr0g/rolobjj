@@ -1,4 +1,5 @@
-import { Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Bot } from 'lucide-react';
 import { useAppContext } from '../context';
 import { Belt } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -39,6 +40,66 @@ export function ProgressView() {
     { name: 'Restante', value: 100 - totalProgress }
   ];
   const COLORS = ['#E6C05C', 'rgba(255,255,255,0.05)'];
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<{text: string, alertSent: boolean} | null>(null);
+
+  const handleAnalyzeProgress = async (simulateDrop: boolean = false) => {
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+    try {
+      if (simulateDrop) {
+        const response = await fetch('/api/test-telegram-alert', {
+          method: 'POST',
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al simular alerta');
+        }
+        setAnalysisResult({
+          text: data.analysis,
+          alertSent: data.alertSent
+        });
+      } else {
+        const studentData = {
+          name: userProfile.name,
+          belt: userProfile.belt,
+          degree: userProfile.degree,
+          sessionsCompleted: 128,
+          sessionsRequired: 120,
+          validatedTechniques: validatedTechniques,
+          totalTechniques: totalTechniques,
+          progress: totalProgress
+        };
+        
+        const response = await fetch('/api/analyze-performance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ studentData }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al analizar');
+        }
+        
+        const data = await response.json();
+        setAnalysisResult({
+          text: data.analysis,
+          alertSent: data.alertSent
+        });
+      }
+    } catch (e: any) {
+      console.error(e);
+      setAnalysisResult({
+        text: e.message || "Error al realizar el análisis. Asegúrate de configurar GEMINI_API_KEY y las variables de Telegram.",
+        alertSent: false
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleDownloadReport = () => {
     // Generate report content
@@ -195,6 +256,40 @@ export function ProgressView() {
               Validación de instructor
             </li>
           </ul>
+
+          <div className="mt-8 border-t border-white/5 pt-6 flex flex-col gap-3">
+            <button
+              onClick={() => handleAnalyzeProgress(false)}
+              disabled={isAnalyzing}
+              className="w-full bg-rolo-surface/50 hover:bg-white/5 border border-white/10 text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Bot className="w-4 h-4 text-rolo-gold" />
+              {isAnalyzing ? 'Analizando rendimiento...' : 'Análisis IA y Alertas'}
+            </button>
+            <button
+              onClick={() => handleAnalyzeProgress(true)}
+              disabled={isAnalyzing}
+              className="w-full bg-red-900/20 hover:bg-red-900/40 border border-red-500/30 text-red-200 font-medium py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Bot className="w-4 h-4 text-red-400" />
+              {isAnalyzing ? 'Analizando...' : 'Simular Bajón de Rendimiento'}
+            </button>
+            
+            {analysisResult && (
+              <div className="mt-4 bg-black/20 rounded-xl p-4 border border-white/5 text-sm">
+                <p className="text-white/90 leading-relaxed mb-3">{analysisResult.text}</p>
+                {analysisResult.alertSent ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rolo-gold bg-rolo-gold/10 px-2.5 py-1 rounded-md">
+                    ✓ Alerta enviada a Telegram
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rolo-text-muted bg-white/5 px-2.5 py-1 rounded-md">
+                    Sin alertas críticas
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
