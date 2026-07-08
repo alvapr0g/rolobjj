@@ -85,7 +85,8 @@ export function ProgressView() {
         });
         
         if (!response.ok) {
-          throw new Error('Error al analizar');
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || errData.details || 'Error al analizar');
         }
         
         const data = await response.json();
