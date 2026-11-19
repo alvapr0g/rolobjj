@@ -42,7 +42,7 @@ npm run dev                  # http://localhost:3000
 | `GOOGLE_MAPS_PLATFORM_KEY` | Solo si usas mapas de Google; restríngela por dominio. |
 
 ### 3. Despliegue
-- **Netlify** (`netlify.toml` incluido): compila con `npm run build:web` y sirve `/api/*` con `netlify/functions/api.mts`.
+- **Netlify** (`netlify.toml` incluido): compila con `npm run build:netlify` (web + función precompilada en `netlify/functions/api.cjs`) y sirve `/api/*` con esa función.
 - **Cloud Run / Render / Railway:** `npm run build && npm start` (Express sirve `dist/` y `/api`).
 
 ## Seguridad
