@@ -1,13 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>ROLO – Registro de entrenamiento y progreso de Jiu-Jitsu Brasileño</title>
+    <meta name="description" content="ROLO es tu bitácora de BJJ: registra tus sesiones, consulta la biblioteca de técnicas y sigue tu progreso hacia el siguiente cinturón." />
+    <meta name="theme-color" content="#071711" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ROLO – Registra. Aprende. Progresa." />
+    <meta property="og:description" content="Bitácora de entrenamiento de Jiu-Jitsu Brasileño: sesiones, técnicas y progreso de cinturón." />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Contenido inicial indexable; React lo reemplaza al cargar. -->
+      <main style="font-family: system-ui, sans-serif; background: #071711; color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px">
+        <h1 style="letter-spacing: 0.2em; font-size: 3rem; margin: 0 0 12px">ROLO</h1>
+        <p style="color: #9ca3af; max-width: 28rem; line-height: 1.6">Registra. Aprende. Progresa. Bitácora de entrenamiento de Jiu-Jitsu Brasileño: sesiones, biblioteca de técnicas y progreso hacia tu siguiente cinturón.</p>
+      </main>
+    </div>
+    <noscript>ROLO necesita JavaScript para funcionar.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

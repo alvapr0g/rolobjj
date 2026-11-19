@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // El rol "profesor" solo se asigna a mano desde la consola de Firebase
+    // (campo users/{uid}.role). Los clientes nunca pueden cambiarlo.
+    function isProfesor() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'profesor';
+    }
+
+    function validProfile(d) {
+      return d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && d.belt in ['Blanco', 'Azul', 'Morado', 'Marrón', 'Negro']
+        && d.degree is int && d.degree >= 0 && d.degree <= 6
+        && d.avatar is string && d.avatar.size() <= 150000
+        && d.beltSince is string && d.beltSince.size() == 10
+        && d.role in ['alumno', 'profesor'];
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isProfesor();
+      allow create: if isOwner(uid)
+        && request.resource.data.role == 'alumno'
+        && validProfile(request.resource.data);
+      allow update: if isOwner(uid)
+        && request.resource.data.role == resource.data.role
+        && validProfile(request.resource.data);
+      allow delete: if false;
+
+      match /sessions/{sessionId} {
+        allow read: if isOwner(uid) || isProfesor();
+        allow create, update: if isOwner(uid)
+          && request.resource.data.type in ['Drilling', 'Rolling', 'Clase']
+          && request.resource.data.date is string && request.resource.data.date.size() == 10
+          && request.resource.data.duration is int
+          && request.resource.data.duration >= 1 && request.resource.data.duration <= 480
+          && request.resource.data.rpe is int
+          && request.resource.data.rpe >= 1 && request.resource.data.rpe <= 10
+          && request.resource.data.techniques is list && request.resource.data.techniques.size() <= 30
+          && request.resource.data.notes is string && request.resource.data.notes.size() <= 1000;
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // Validaciones de técnicas: las lee el alumno afectado y las escribe un profesor.
+    match /validations/{id} {
+      allow read: if signedIn() && (resource.data.studentId == request.auth.uid || isProfesor());
+      allow create, update: if isProfesor()
+        && request.resource.data.studentId is string
+        && request.resource.data.techniqueId is string
+        && request.resource.data.validatedBy == request.auth.uid
+        && id == request.resource.data.studentId + '_' + request.resource.data.techniqueId;
+      allow delete: if isProfesor();
+    }
+
+    match /classes/{id} {
+      allow read: if isProfesor();
+      allow create: if isProfesor() && request.resource.data.professorId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Alertas de rendimiento: las escribe solo el servidor (Admin SDK) y las leen los profesores.
+    match /alerts/{id} {
+      allow read: if isProfesor();
+      allow write: if false;
+    }
+  }
+}

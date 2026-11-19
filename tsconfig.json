@@ -21,6 +21,15 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
-  }
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": true
+  },
+  "include": [
+    "src",
+    "server",
+    "server.ts",
+    "netlify",
+    "vite.config.ts"
+  ]
 }

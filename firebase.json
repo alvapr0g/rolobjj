@@ -1,0 +1,7 @@
+{
+  "firestore": {
+    "database": "ai-studio-rolobjjtracker-3a4dd354-facd-41ec-bf08-ef9feaabf9a0",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

@@ -1,17 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Users, CheckCircle2, ChevronRight, Check, Tag, Bot, Bell, Download } from 'lucide-react';
+import { Search, CheckCircle2, ChevronRight, Check, Tag, Bell, Download } from 'lucide-react';
 import { useAppContext } from '../context';
-
-interface AlertLog {
-  id: string;
-  date: string;
-  studentName: string;
-  message: string;
-}
+import { Avatar } from './Avatar';
+import { AlertLog } from '../types';
 
 export function ProfessorDashboard() {
-  const { techniques, students, validateTechniqueForStudents, userProfile } = useAppContext();
+  const { techniques, students, validateTechniqueForStudents, getIdToken } = useAppContext();
   
   // Wizard State
   const [step, setStep] = useState(1);
@@ -19,16 +14,17 @@ export function ProfessorDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTech, setSelectedTech] = useState<string | null>(null);
   const [attendees, setAttendees] = useState<Set<string>>(new Set());
-  const [isTestingAlert, setIsTestingAlert] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [alertLogs, setAlertLogs] = useState<AlertLog[]>([]);
 
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const res = await fetch('/api/alert-logs');
-        if (res.ok) {
-          const data = await res.json();
-          setAlertLogs(data);
+        const token = await getIdToken();
+        const res = await fetch('/api/alert-logs', { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
+          setAlertLogs(await res.json());
         }
       } catch (e) {
         console.error("Error fetching alert logs:", e);
@@ -36,30 +32,7 @@ export function ProfessorDashboard() {
     };
     
     fetchLogs();
-  }, [step, isTestingAlert]);
-
-  const handleTestAlert = async () => {
-    setIsTestingAlert(true);
-    try {
-      const response = await fetch('/api/test-telegram-alert', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ studentName: userProfile.name }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al enviar alerta de prueba');
-      }
-      alert('Alerta enviada exitosamente: ' + data.analysis);
-    } catch (e: any) {
-      console.error(e);
-      alert('Error: ' + e.message);
-    } finally {
-      setIsTestingAlert(false);
-    }
-  };
+  }, [step, getIdToken]);
 
   const filteredTechniques = techniques.filter(t => 
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -75,10 +48,17 @@ export function ProfessorDashboard() {
     });
   };
 
-  const handleValidate = () => {
-    if (selectedTech && attendees.size > 0) {
-      validateTechniqueForStudents(Array.from(attendees), selectedTech);
+  const handleValidate = async () => {
+    if (!selectedTech || attendees.size === 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await validateTechniqueForStudents(Array.from(attendees), selectedTech, sessionType);
       setStep(3);
+    } catch {
+      setError('No se pudo guardar la validación. Inténtalo de nuevo.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -87,6 +67,7 @@ export function ProfessorDashboard() {
     setSearchQuery('');
     setSelectedTech(null);
     setAttendees(new Set());
+    setError(null);
   };
 
   return (
@@ -96,15 +77,7 @@ export function ProfessorDashboard() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight text-white">Panel del Profesor</h1>
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleTestAlert}
-              disabled={isTestingAlert}
-              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-red-900/20 text-red-200 border border-red-500/30 rounded-lg hover:bg-red-900/40 transition-colors disabled:opacity-50"
-            >
-              <Bot className="w-3.5 h-3.5" />
-              {isTestingAlert ? 'Enviando...' : 'Test Alerta'}
-            </button>
-            <div className="flex items-center gap-2 w-24">
+            <div className="flex items-center gap-2 w-24" role="img" aria-label={`Paso ${step} de 3`}>
               {[1, 2, 3].map(i => (
                 <div key={i} className={`h-1.5 flex-1 rounded-full ${step >= i ? 'bg-rolo-gold' : 'bg-rolo-surface'}`} />
               ))}
@@ -134,6 +107,7 @@ export function ProfessorDashboard() {
                       <button
                         key={type}
                         onClick={() => setSessionType(type)}
+                        aria-pressed={sessionType === type}
                         className={`flex-1 min-w-[120px] py-4 px-4 rounded-xl text-sm font-bold transition-all ${
                           sessionType === type 
                             ? 'bg-rolo-gold text-rolo-bg shadow-lg shadow-rolo-gold/20' 
@@ -151,7 +125,8 @@ export function ProfessorDashboard() {
                   <div className="relative mb-6">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rolo-text-muted" />
                     <input 
-                      type="text" 
+                      type="search" 
+                      aria-label="Buscar técnica"
                       placeholder="Buscar por nombre o etiqueta..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -164,6 +139,7 @@ export function ProfessorDashboard() {
                       <button
                         key={tech.id}
                         onClick={() => setSelectedTech(tech.id)}
+                        aria-pressed={selectedTech === tech.id}
                         className={`flex flex-col items-start p-5 rounded-2xl border text-left transition-all ${
                           selectedTech === tech.id 
                             ? 'bg-rolo-gold-dim border-rolo-gold' 
@@ -173,7 +149,7 @@ export function ProfessorDashboard() {
                         <span className="font-semibold text-white mb-3 text-lg">{tech.name}</span>
                         <div className="flex flex-wrap gap-2">
                           {tech.tags.map(tag => (
-                            <span key={tag} className="flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium bg-black/30 text-rolo-text-muted px-2 py-1 rounded-md">
+                            <span key={tag} className="flex items-center gap-1 text-xs uppercase tracking-wider font-medium bg-black/30 text-rolo-text-muted px-2 py-1 rounded-md">
                               <Tag className="w-3 h-3" />
                               {tag}
                             </span>
@@ -189,13 +165,14 @@ export function ProfessorDashboard() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Bell className="w-5 h-5 text-rolo-gold" />
-                      <h2 className="text-sm font-medium text-rolo-text-muted uppercase tracking-wider">Log de Alertas Telegram</h2>
+                      <h2 className="text-sm font-medium text-rolo-text-muted uppercase tracking-wider">Alertas de rendimiento</h2>
                     </div>
                     {alertLogs.length > 0 && (
                       <button
                         onClick={() => {
                           const headers = "Fecha,Estudiante,Mensaje\n";
-                          const rows = alertLogs.map(log => `"${new Date(log.date).toLocaleString()}","${log.studentName}","${log.message.replace(/"/g, '""')}"`).join("\n");
+                          const cell = (v: string) => `"${(/^[=+\-@\t\r]/.test(v) ? "'" + v : v).replace(/"/g, '""')}"`;
+                          const rows = alertLogs.map(log => [new Date(log.date).toLocaleString(), log.studentName, log.message].map(cell).join(",")).join("\n");
                           const csv = headers + rows;
                           const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                           const url = URL.createObjectURL(blob);
@@ -248,19 +225,21 @@ export function ProfessorDashboard() {
 
                 <h2 className="text-sm font-medium text-rolo-text-muted uppercase tracking-wider mb-4">Asistencia & Validación Masiva</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {students.length === 0 && <p className="text-rolo-text-muted col-span-full">Aún no hay alumnos registrados.</p>}
                   {students.map(student => {
-                    const isPresent = attendees.has(student.id);
+                    const isPresent = attendees.has(student.uid);
                     return (
                       <button
-                        key={student.id}
-                        onClick={() => toggleAttendee(student.id)}
+                        key={student.uid}
+                        onClick={() => toggleAttendee(student.uid)}
+                        aria-pressed={isPresent}
                         className={`w-full flex items-center p-4 rounded-2xl transition-all border ${
                           isPresent 
                             ? 'bg-rolo-surface border-rolo-gold/30 shadow-md shadow-rolo-gold/5' 
                             : 'bg-rolo-surface/50 border-transparent hover:bg-rolo-surface'
                         }`}
                       >
-                        <img src={student.avatar} alt={student.name} className="w-14 h-14 rounded-full bg-black/50" />
+                        <Avatar name={student.name} src={student.avatar} className="w-14 h-14" />
                         <div className="ml-4 text-left flex-1">
                           <p className={`font-bold text-lg ${isPresent ? 'text-white' : 'text-rolo-text'}`}>{student.name}</p>
                           <p className="text-sm text-rolo-text-muted mt-0.5">Cinturón {student.belt}</p>
@@ -300,10 +279,10 @@ export function ProfessorDashboard() {
                   <p className="text-xs text-rolo-text-muted uppercase tracking-wider mb-3">Alumnos validados</p>
                   <div className="flex flex-wrap gap-2">
                     {Array.from(attendees).map(id => {
-                      const student = students.find(s => s.id === id);
+                      const student = students.find(s => s.uid === id);
                       return student ? (
                         <div key={id} className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full border border-white/5">
-                          <img src={student.avatar} className="w-6 h-6 rounded-full" alt="avatar" />
+                          <Avatar name={student.name} src={student.avatar} className="w-6 h-6 text-[10px]" />
                           <span className="text-xs font-medium text-white">{student.name.split(' ')[0]}</span>
                         </div>
                       ) : null;
@@ -320,6 +299,7 @@ export function ProfessorDashboard() {
       {/* Sticky Bottom Action Bar */}
       <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-rolo-bg via-rolo-bg to-transparent pointer-events-none">
         <div className="max-w-2xl mx-auto pointer-events-auto">
+          {error && <p role="alert" className="text-sm text-red-300 bg-red-900/60 border border-red-500/30 rounded-lg px-3 py-2 mb-3">{error}</p>}
           {step === 1 && (
             <button 
               disabled={!selectedTech}
@@ -332,11 +312,11 @@ export function ProfessorDashboard() {
           )}
           {step === 2 && (
             <button 
-              disabled={attendees.size === 0}
+              disabled={attendees.size === 0 || saving}
               onClick={handleValidate}
               className="w-full bg-rolo-gold disabled:bg-rolo-surface disabled:text-rolo-text-muted text-rolo-bg font-bold py-5 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_20px_rgba(230,192,92,0.15)] hover:shadow-[0_4px_25px_rgba(230,192,92,0.25)] disabled:shadow-none hover:scale-[1.01]"
             >
-              Validar Técnica ({attendees.size})
+              {saving ? 'Guardando…' : `Validar Técnica (${attendees.size})`}
               <CheckCircle2 className="w-5 h-5" />
             </button>
           )}

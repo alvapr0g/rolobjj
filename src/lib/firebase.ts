@@ -1,15 +1,20 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import config from '../../firebase-applet-config.json';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCllHwpqyioc7Rox5yQoGl0imy1pc4f3u4",
-  authDomain: "gen-lang-client-0466906158.firebaseapp.com",
-  projectId: "gen-lang-client-0466906158",
-  storageBucket: "gen-lang-client-0466906158.firebasestorage.app",
-  messagingSenderId: "20352282294",
-  appId: "1:20352282294:web:a07a7e49933ac5e3f60017"
-};
+// La configuración web de Firebase es pública por diseño: la seguridad real
+// la dan las reglas de Firestore (firestore.rules) y los dominios autorizados en Auth.
+const app = initializeApp({
+  apiKey: config.apiKey,
+  authDomain: config.authDomain,
+  projectId: config.projectId,
+  storageBucket: config.storageBucket,
+  messagingSenderId: config.messagingSenderId,
+  appId: config.appId,
+});
 
-const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app, config.firestoreDatabaseId);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
